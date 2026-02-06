@@ -2,27 +2,27 @@
 import PackageDescription
 
 let package = Package(
-    name: "CustomWebview",
+    name: "CapacitorIosCustomWebView",
     platforms: [.iOS(.v15)],
     products: [
         .library(
-            name: "CustomWebview",
-            targets: ["CustomWebViewPlugin"])
+            name: "CapacitorIosCustomWebView",
+            targets: ["CapacitorIosCustomWebView"])
     ],
     dependencies: [
         .package(url: "https://github.com/ionic-team/capacitor-swift-pm.git", from: "8.0.0")
     ],
     targets: [
         .target(
-            name: "CustomWebViewPlugin",
+            name: "CapacitorIosCustomWebView",
             dependencies: [
                 .product(name: "Capacitor", package: "capacitor-swift-pm"),
                 .product(name: "Cordova", package: "capacitor-swift-pm")
             ],
             path: "ios/Sources/CustomWebViewPlugin"),
         .testTarget(
-            name: "CustomWebViewPluginTests",
-            dependencies: ["CustomWebViewPlugin"],
+            name: "CapacitorIosCustomWebViewTests",
+            dependencies: ["CapacitorIosCustomWebView"],
             path: "ios/Tests/CustomWebViewPluginTests")
     ]
 )
