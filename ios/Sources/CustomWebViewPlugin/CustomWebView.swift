@@ -1,13 +1,16 @@
 import UIKit
 import WebKit
 
-final class CustomWebViewController: UIViewController, UIGestureRecognizerDelegate {
+final class CustomWebViewController: UIViewController, UIGestureRecognizerDelegate, WKNavigationDelegate {
 
     private let url: URL
+    private let closeButtonText: String
     private let webView = WKWebView()
+    private var backButton: UIButton!
 
-    init(url: URL) {
+    init(url: URL, closeButtonText: String? = nil) {
         self.url = url
+        self.closeButtonText = closeButtonText ?? "Close"
         super.init(nibName: nil, bundle: nil)
     }
 
@@ -21,7 +24,7 @@ final class CustomWebViewController: UIViewController, UIGestureRecognizerDelega
 
         setupHeader()
         setupWebView()
-        setupGesture()
+        // setupGesture()
         load()
     }
 
@@ -31,8 +34,15 @@ final class CustomWebViewController: UIViewController, UIGestureRecognizerDelega
         header.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(header)
 
+        let back = UIButton(type: .system)
+        back.setImage(UIImage(systemName: "chevron.left"), for: .normal)
+        back.addTarget(self, action: #selector(backTapped), for: .touchUpInside)
+        back.translatesAutoresizingMaskIntoConstraints = false
+        header.addSubview(back)
+        self.backButton = back
+
         let close = UIButton(type: .system)
-        close.setTitle("X", for: .normal)
+        close.setTitle(closeButtonText, for: .normal)
         close.addTarget(self, action: #selector(closeTapped), for: .touchUpInside)
         close.translatesAutoresizingMaskIntoConstraints = false
         header.addSubview(close)
@@ -43,14 +53,23 @@ final class CustomWebViewController: UIViewController, UIGestureRecognizerDelega
             header.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             header.heightAnchor.constraint(equalToConstant: 48),
 
-            close.leadingAnchor.constraint(equalTo: header.leadingAnchor, constant: 16),
+            back.leadingAnchor.constraint(equalTo: header.leadingAnchor, constant: 8),
+            back.centerYAnchor.constraint(equalTo: header.centerYAnchor),
+            back.widthAnchor.constraint(equalToConstant: 44),
+            back.heightAnchor.constraint(equalToConstant: 44),
+
+            close.leadingAnchor.constraint(equalTo: back.trailingAnchor, constant: 4),
             close.centerYAnchor.constraint(equalTo: header.centerYAnchor)
         ])
+
+        updateBackButton()
     }
+
 
     private func setupWebView() {
         webView.translatesAutoresizingMaskIntoConstraints = false
         webView.allowsBackForwardNavigationGestures = true
+        webView.navigationDelegate = self
         view.addSubview(webView)
 
         NSLayoutConstraint.activate([
@@ -61,15 +80,15 @@ final class CustomWebViewController: UIViewController, UIGestureRecognizerDelega
         ])
     }
 
-    private func setupGesture() {
-        let edge = UIScreenEdgePanGestureRecognizer(
-            target: self,
-            action: #selector(handleEdgeSwipe)
-        )
-        edge.edges = .left
-        edge.delegate = self
-        view.addGestureRecognizer(edge)
-    }
+    // private func setupGesture() {
+    //     let edge = UIScreenEdgePanGestureRecognizer(
+    //         target: self,
+    //         action: #selector(handleEdgeSwipe)
+    //     )
+    //     edge.edges = .left
+    //     edge.delegate = self
+    //     view.addGestureRecognizer(edge)
+    // }
 
     private func load() {
         webView.load(URLRequest(url: url))
@@ -79,19 +98,37 @@ final class CustomWebViewController: UIViewController, UIGestureRecognizerDelega
         dismiss(animated: true)
     }
 
-    // 👉 여기 핵심
-    func gestureRecognizerShouldBegin(_ gestureRecognizer: UIGestureRecognizer) -> Bool {
-        // 웹뷰 히스토리가 없을 때만 제스처 시작
-        return webView.canGoBack == false
+    // func gestureRecognizerShouldBegin(_ gestureRecognizer: UIGestureRecognizer) -> Bool {
+    //     // 웹뷰 히스토리가 없을 때만 제스처 시작
+    //     return webView.canGoBack == false
+    // }
+
+    // @objc private func handleEdgeSwipe(_ g: UIScreenEdgePanGestureRecognizer) {
+    //     if g.state == .ended {
+    //         if webView.canGoBack {
+    //             webView.goBack()
+    //         } else {
+    //             dismiss(animated: true)
+    //         }
+    //     }
+    // }
+
+    private func updateBackButton() {
+        backButton.isEnabled = webView.canGoBack
+        backButton.alpha = webView.canGoBack ? 1.0 : 0.3
     }
 
-    @objc private func handleEdgeSwipe(_ g: UIScreenEdgePanGestureRecognizer) {
-        if g.state == .ended {
-            if webView.canGoBack {
-                webView.goBack()
-            } else {
-                dismiss(animated: true)
-            }
+    
+    func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
+        updateBackButton()
+    }
+
+    @objc private func backTapped() {
+        guard webView.canGoBack else { return }
+        webView.goBack()
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+            self.updateBackButton()
         }
     }
 }

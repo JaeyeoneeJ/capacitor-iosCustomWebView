@@ -1,11 +1,11 @@
-# custom-webview
+# capacitor-iosCustomWebView
 
-custom webview
+capacitor iosCustomWebView
 
 ## Install
 
 ```bash
-npm install custom-webview
+npm install capacitor-iosCustomWebView
 npx cap sync
 ```
 
@@ -24,12 +24,12 @@ npx cap sync
 ### open(...)
 
 ```typescript
-open(options: { url: string; }) => Promise<void>
+open(options: { url: string; closeButtonText?: string; }) => Promise<void>
 ```
 
-| Param         | Type                          |
-| ------------- | ----------------------------- |
-| **`options`** | <code>{ url: string; }</code> |
+| Param         | Type                                                    |
+| ------------- | ------------------------------------------------------- |
+| **`options`** | <code>{ url: string; closeButtonText?: string; }</code> |
 
 --------------------
 

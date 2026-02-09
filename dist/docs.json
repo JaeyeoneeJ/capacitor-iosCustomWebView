@@ -7,12 +7,12 @@
     "methods": [
       {
         "name": "open",
-        "signature": "(options: { url: string; }) => Promise<void>",
+        "signature": "(options: { url: string; closeButtonText?: string; }) => Promise<void>",
         "parameters": [
           {
             "name": "options",
             "docs": "",
-            "type": "{ url: string; }"
+            "type": "{ url: string; closeButtonText?: string | undefined; }"
           }
         ],
         "returns": "Promise<void>",
