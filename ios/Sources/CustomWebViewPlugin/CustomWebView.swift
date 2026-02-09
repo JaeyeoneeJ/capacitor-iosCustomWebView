@@ -24,7 +24,6 @@ final class CustomWebViewController: UIViewController, UIGestureRecognizerDelega
 
         setupHeader()
         setupWebView()
-        // setupGesture()
         load()
     }
 
@@ -61,8 +60,6 @@ final class CustomWebViewController: UIViewController, UIGestureRecognizerDelega
             close.leadingAnchor.constraint(equalTo: back.trailingAnchor, constant: 4),
             close.centerYAnchor.constraint(equalTo: header.centerYAnchor)
         ])
-
-        updateBackButton()
     }
 
 
@@ -80,16 +77,6 @@ final class CustomWebViewController: UIViewController, UIGestureRecognizerDelega
         ])
     }
 
-    // private func setupGesture() {
-    //     let edge = UIScreenEdgePanGestureRecognizer(
-    //         target: self,
-    //         action: #selector(handleEdgeSwipe)
-    //     )
-    //     edge.edges = .left
-    //     edge.delegate = self
-    //     view.addGestureRecognizer(edge)
-    // }
-
     private func load() {
         webView.load(URLRequest(url: url))
     }
@@ -98,37 +85,78 @@ final class CustomWebViewController: UIViewController, UIGestureRecognizerDelega
         dismiss(animated: true)
     }
 
-    // func gestureRecognizerShouldBegin(_ gestureRecognizer: UIGestureRecognizer) -> Bool {
-    //     // 웹뷰 히스토리가 없을 때만 제스처 시작
-    //     return webView.canGoBack == false
-    // }
-
-    // @objc private func handleEdgeSwipe(_ g: UIScreenEdgePanGestureRecognizer) {
-    //     if g.state == .ended {
-    //         if webView.canGoBack {
-    //             webView.goBack()
-    //         } else {
-    //             dismiss(animated: true)
-    //         }
-    //     }
-    // }
-
-    private func updateBackButton() {
-        backButton.isEnabled = webView.canGoBack
-        backButton.alpha = webView.canGoBack ? 1.0 : 0.3
-    }
-
     
     func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
-        updateBackButton()
     }
 
-    @objc private func backTapped() {
-        guard webView.canGoBack else { return }
-        webView.goBack()
+    private var toastView: UIView?
 
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
-            self.updateBackButton()
+    private func showToast(_ message: String) {
+        toastView?.removeFromSuperview()
+
+        let label = UILabel()
+        label.text = message
+        label.textColor = .white
+        label.font = UIFont.preferredFont(forTextStyle: .callout)
+        label.textAlignment = .center
+        label.numberOfLines = 0
+
+        let container = UIView()
+        container.backgroundColor = UIColor.black.withAlphaComponent(0.7)
+        container.layer.cornerRadius = 10
+        container.clipsToBounds = true
+        container.alpha = 0
+
+        label.translatesAutoresizingMaskIntoConstraints = false
+        container.translatesAutoresizingMaskIntoConstraints = false
+
+        container.addSubview(label)
+        view.addSubview(container)
+        toastView = container
+
+        NSLayoutConstraint.activate([
+            label.topAnchor.constraint(equalTo: container.topAnchor, constant: 10),
+            label.bottomAnchor.constraint(equalTo: container.bottomAnchor, constant: -10),
+            label.leadingAnchor.constraint(equalTo: container.leadingAnchor, constant: 14),
+            label.trailingAnchor.constraint(equalTo: container.trailingAnchor, constant: -14),
+
+            container.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            container.bottomAnchor.constraint(
+                equalTo: view.safeAreaLayoutGuide.bottomAnchor,
+                constant: -20
+            ),
+            container.widthAnchor.constraint(lessThanOrEqualToConstant: 320)
+        ])
+
+        UIView.animate(withDuration: 0.25) {
+            container.alpha = 1
+        }
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.8) {
+            UIView.animate(withDuration: 0.25, animations: {
+                container.alpha = 0
+            }) { _ in
+                container.removeFromSuperview()
+            }
+        }
+    }
+    
+    private var lastBackPressedAt: Date?
+    
+    @objc private func backTapped() {
+        if webView.canGoBack {
+        webView.goBack()
+        return
+        }
+        
+        let now = Date()
+        
+        if let last = lastBackPressedAt,
+           now.timeIntervalSince(last) < 2 {
+            dismiss(animated: true)
+        } else {
+            lastBackPressedAt = now
+            showToast("한 번 더 누르면 웹뷰가 종료됩니다.")
         }
     }
 }
