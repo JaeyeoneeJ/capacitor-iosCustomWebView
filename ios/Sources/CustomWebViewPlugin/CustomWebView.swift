@@ -1,16 +1,24 @@
 import UIKit
 import WebKit
 
-final class CustomWebViewController: UIViewController, UIGestureRecognizerDelegate, WKNavigationDelegate {
+final class CustomWebViewController: UIViewController, WKNavigationDelegate {
 
     private let url: URL
-    private let closeButtonText: String
+    private let closeButtonText: String?
+    private let closeWarningText: String
     private let webView = WKWebView()
     private var backButton: UIButton!
+    private let toolbarPosition: ToolbarPosition
+    private let toolbarHeight: CGFloat = 48
 
-    init(url: URL, closeButtonText: String? = nil) {
+    // gradient view
+    private let gradientView = UIView()
+
+    init(url: URL, closeButtonText: String? = nil, closeWarningText: String? = nil, toolbarPosition: ToolbarPosition = .top) {
         self.url = url
-        self.closeButtonText = closeButtonText ?? "Close"
+        self.closeButtonText = closeButtonText
+        self.closeWarningText = closeWarningText ?? "Tap again to close the WebView."
+        self.toolbarPosition = toolbarPosition
         super.init(nibName: nil, bundle: nil)
     }
 
@@ -24,12 +32,16 @@ final class CustomWebViewController: UIViewController, UIGestureRecognizerDelega
 
         setupHeader()
         setupWebView()
+        setupGradient()
         load()
     }
 
+    // MARK: - Header
+
+    private let header = UIView()
+
     private func setupHeader() {
-        let header = UIView()
-        header.backgroundColor = .white
+        header.backgroundColor = UIColor.systemBackground.withAlphaComponent(0.95)
         header.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(header)
 
@@ -41,27 +53,45 @@ final class CustomWebViewController: UIViewController, UIGestureRecognizerDelega
         self.backButton = back
 
         let close = UIButton(type: .system)
-        close.setTitle(closeButtonText, for: .normal)
+        if let text = closeButtonText, !text.isEmpty {
+            close.setTitle(text, for: .normal)
+        } else {
+            close.setImage(UIImage(systemName: "xmark"), for: .normal)
+        }
         close.addTarget(self, action: #selector(closeTapped), for: .touchUpInside)
         close.translatesAutoresizingMaskIntoConstraints = false
         header.addSubview(close)
 
         NSLayoutConstraint.activate([
-            header.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
-            header.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            header.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            header.heightAnchor.constraint(equalToConstant: 48),
-
             back.leadingAnchor.constraint(equalTo: header.leadingAnchor, constant: 8),
             back.centerYAnchor.constraint(equalTo: header.centerYAnchor),
             back.widthAnchor.constraint(equalToConstant: 44),
             back.heightAnchor.constraint(equalToConstant: 44),
 
-            close.leadingAnchor.constraint(equalTo: back.trailingAnchor, constant: 4),
-            close.centerYAnchor.constraint(equalTo: header.centerYAnchor)
+            close.trailingAnchor.constraint(equalTo: header.trailingAnchor, constant: -8),
+            close.centerYAnchor.constraint(equalTo: header.centerYAnchor),
+            close.widthAnchor.constraint(equalToConstant: 44),
+            close.heightAnchor.constraint(equalToConstant: 44)
+        ])
+
+        if toolbarPosition == .top {
+            NSLayoutConstraint.activate([
+                header.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor)
+            ])
+        } else {
+            NSLayoutConstraint.activate([
+                header.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -8)
+            ])
+        }
+
+        NSLayoutConstraint.activate([
+            header.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            header.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            header.heightAnchor.constraint(equalToConstant: toolbarHeight)
         ])
     }
 
+    // MARK: - WebView
 
     private func setupWebView() {
         webView.translatesAutoresizingMaskIntoConstraints = false
@@ -69,14 +99,65 @@ final class CustomWebViewController: UIViewController, UIGestureRecognizerDelega
         webView.navigationDelegate = self
         view.addSubview(webView)
 
+        if toolbarPosition == .top {
+            NSLayoutConstraint.activate([
+                webView.topAnchor.constraint(equalTo: header.bottomAnchor),
+                webView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
+            ])
+        } else {
+            NSLayoutConstraint.activate([
+                webView.topAnchor.constraint(equalTo: view.topAnchor),
+                webView.bottomAnchor.constraint(equalTo: header.topAnchor)
+            ])
+        }
+
         NSLayoutConstraint.activate([
-            webView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 48),
             webView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            webView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            webView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
+            webView.trailingAnchor.constraint(equalTo: view.trailingAnchor)
         ])
     }
 
+    // MARK: - Gradient Shadow
+    private func setupGradient() {
+        gradientView.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(gradientView)
+
+        let gradientLayer = CAGradientLayer()
+        gradientLayer.colors = [
+            UIColor.black.withAlphaComponent(0.05).cgColor,
+            UIColor.clear.cgColor
+        ]
+        gradientLayer.cornerRadius = 0
+
+        let gradientHeight: CGFloat = 6
+
+        if toolbarPosition == .top {
+            gradientView.layer.addSublayer(gradientLayer)
+            NSLayoutConstraint.activate([
+                gradientView.topAnchor.constraint(equalTo: header.bottomAnchor),
+                gradientView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+                gradientView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+                gradientView.heightAnchor.constraint(equalToConstant: gradientHeight)
+            ])
+            gradientLayer.startPoint = CGPoint(x: 0, y: 0)
+            gradientLayer.endPoint = CGPoint(x: 0, y: 1)
+        } else {
+            gradientView.layer.addSublayer(gradientLayer)
+            NSLayoutConstraint.activate([
+                gradientView.bottomAnchor.constraint(equalTo: header.topAnchor),
+                gradientView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+                gradientView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+                gradientView.heightAnchor.constraint(equalToConstant: gradientHeight)
+            ])
+            gradientLayer.startPoint = CGPoint(x: 0, y: 1)
+            gradientLayer.endPoint = CGPoint(x: 0, y: 0)
+        }
+
+        gradientView.layoutIfNeeded()
+        gradientLayer.frame = gradientView.bounds
+    }
+
+    // MARK: - Load URL
     private func load() {
         webView.load(URLRequest(url: url))
     }
@@ -85,11 +166,9 @@ final class CustomWebViewController: UIViewController, UIGestureRecognizerDelega
         dismiss(animated: true)
     }
 
-    
-    func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
-    }
-
+    // MARK: - Toast
     private var toastView: UIView?
+    private var lastBackPressedAt: Date?
 
     private func showToast(_ message: String) {
         toastView?.removeFromSuperview()
@@ -121,10 +200,7 @@ final class CustomWebViewController: UIViewController, UIGestureRecognizerDelega
             label.trailingAnchor.constraint(equalTo: container.trailingAnchor, constant: -14),
 
             container.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            container.bottomAnchor.constraint(
-                equalTo: view.safeAreaLayoutGuide.bottomAnchor,
-                constant: -20
-            ),
+            container.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -20),
             container.widthAnchor.constraint(lessThanOrEqualToConstant: 320)
         ])
 
@@ -140,23 +216,20 @@ final class CustomWebViewController: UIViewController, UIGestureRecognizerDelega
             }
         }
     }
-    
-    private var lastBackPressedAt: Date?
-    
+
+    // MARK: - Back button
     @objc private func backTapped() {
         if webView.canGoBack {
-        webView.goBack()
-        return
+            webView.goBack()
+            return
         }
-        
+
         let now = Date()
-        
-        if let last = lastBackPressedAt,
-           now.timeIntervalSince(last) < 2 {
+        if let last = lastBackPressedAt, now.timeIntervalSince(last) < 2 {
             dismiss(animated: true)
         } else {
             lastBackPressedAt = now
-            showToast("한 번 더 누르면 웹뷰가 종료됩니다.")
+            showToast(closeWarningText)
         }
     }
 }

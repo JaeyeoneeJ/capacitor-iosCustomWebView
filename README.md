@@ -24,12 +24,12 @@ npx cap sync
 ### open(...)
 
 ```typescript
-open(options: { url: string; closeButtonText?: string; }) => Promise<void>
+open(options: { url: string; closeButtonText?: string; closeWarningText?: string; toolbarPosition?: 'top' | 'bottom'; }) => Promise<void>
 ```
 
-| Param         | Type                                                    |
-| ------------- | ------------------------------------------------------- |
-| **`options`** | <code>{ url: string; closeButtonText?: string; }</code> |
+| Param         | Type                                                                                                                    |
+| ------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| **`options`** | <code>{ url: string; closeButtonText?: string; closeWarningText?: string; toolbarPosition?: 'top' \| 'bottom'; }</code> |
 
 --------------------
 

@@ -7,12 +7,12 @@
     "methods": [
       {
         "name": "open",
-        "signature": "(options: { url: string; closeButtonText?: string; }) => Promise<void>",
+        "signature": "(options: { url: string; closeButtonText?: string; closeWarningText?: string; toolbarPosition?: 'top' | 'bottom'; }) => Promise<void>",
         "parameters": [
           {
             "name": "options",
             "docs": "",
-            "type": "{ url: string; closeButtonText?: string | undefined; }"
+            "type": "{ url: string; closeButtonText?: string | undefined; closeWarningText?: string | undefined; toolbarPosition?: 'top' | 'bottom' | undefined; }"
           }
         ],
         "returns": "Promise<void>",

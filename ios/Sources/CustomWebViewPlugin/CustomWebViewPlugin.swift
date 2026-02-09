@@ -16,7 +16,10 @@ public class CustomWebViewPlugin: CAPPlugin, CAPBridgedPlugin {
 
     @objc func open(_ call: CAPPluginCall) {
         let urlString = call.getString("url") ?? ""
-        let closeButtonText = call.getString("closeButtonText") ?? ""
+        let closeButtonText = call.getString("closeButtonText")
+        let closeWarningText = call.getString("closeWarningText")
+        let positionString = call.getString("toolbarPosition") ?? "top"
+        let position: ToolbarPosition = positionString == "bottom" ? .bottom : .top
         guard let url = URL(string: urlString) else {
             call.reject("Invalid URL")
             return
@@ -24,7 +27,7 @@ public class CustomWebViewPlugin: CAPPlugin, CAPBridgedPlugin {
         
 
         DispatchQueue.main.async {
-            let vc = CustomWebViewController(url: url, closeButtonText: closeButtonText)
+            let vc = CustomWebViewController(url: url, closeButtonText: closeButtonText, closeWarningText: closeWarningText, toolbarPosition: position)
             vc.modalPresentationStyle = .fullScreen
             self.bridge?.viewController?.present(vc, animated: true)
             self.webVC = vc
