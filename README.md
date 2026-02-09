@@ -5,7 +5,7 @@ capacitor iosCustomWebView
 ## Install
 
 ```bash
-npm install capacitor-iosCustomWebView
+npm install @jaeyeonee/capacitor-ios-webview
 npx cap sync
 ```
 
@@ -13,8 +13,8 @@ npx cap sync
 
 <docgen-index>
 
-* [`open(...)`](#open)
-* [`close()`](#close)
+- [`open(...)`](#open)
+- [`close()`](#close)
 
 </docgen-index>
 
@@ -31,8 +31,7 @@ open(options: { url: string; closeButtonText?: string; closeWarningText?: string
 | ------------- | ----------------------------------------------------------------------------------------------------------------------- |
 | **`options`** | <code>{ url: string; closeButtonText?: string; closeWarningText?: string; toolbarPosition?: 'top' \| 'bottom'; }</code> |
 
---------------------
-
+---
 
 ### close()
 
@@ -40,6 +39,6 @@ open(options: { url: string; closeButtonText?: string; closeWarningText?: string
 close() => Promise<void>
 ```
 
---------------------
+---
 
 </docgen-api>
